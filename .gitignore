@@ -1,0 +1,43 @@
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# VS Code settings
+.vscode/
+
+# Datasets
+data/
+*.zip
+
+# Generated outputs
+results/
+runs/
+logs/
+*.log
+
+# Backups
+backup/
+backup_handfracture/
+
+# Temporary files
+*.tmp
+.ipynb_checkpoints/
+
+# Local environment exports
+requirements-full.txt

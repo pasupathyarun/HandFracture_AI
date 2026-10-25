@@ -1,0 +1,1211 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HandFracture AI Dashboard</title>
+
+<style>
+:root {
+  --bg: #080f1c;
+  --panel: #152033;
+  --border: #2b3d57;
+  --text: #edf3ff;
+  --muted: #a3b4ce;
+  --blue: #66a5ff;
+  --green: #61d0ae;
+  --orange: #ffc47c;
+  --red: #ff9292;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+header {
+  padding: 22px 5%;
+  border-bottom: 1px solid var(--border);
+  font-size: 23px;
+  font-weight: 750;
+}
+
+main {
+  width: min(1300px, 94%);
+  margin: 30px auto;
+}
+
+h1 {
+  font-size: 30px;
+}
+
+h2 {
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 18px 0;
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.grid .panel {
+  margin: 0;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  overflow-wrap: anywhere;
+}
+
+.metric span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.metric strong {
+  display: block;
+  font-size: 22px;
+  margin-top: 10px;
+}
+
+.drop {
+  display: block;
+  border: 2px dashed #526987;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.drop:hover {
+  border-color: var(--blue);
+}
+
+input[type="file"] {
+  display: none;
+}
+
+select {
+  background: #0b1424;
+  color: white;
+  border: 1px solid #526987;
+  padding: 12px;
+  border-radius: 8px;
+  max-width: 100%;
+  margin-top: 8px;
+}
+
+button {
+  background: var(--blue);
+  color: #08111f;
+  font-weight: 750;
+  border: 0;
+  padding: 13px 22px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  max-height: 580px;
+  object-fit: contain;
+  background: #090f19;
+  border-radius: 10px;
+}
+
+.empty {
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  text-align: center;
+  border: 1px dashed #526987;
+  border-radius: 10px;
+  color: var(--muted);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.success {
+  color: var(--green);
+}
+
+.error {
+  color: var(--red);
+}
+
+.warning {
+  color: var(--orange);
+}
+
+.track {
+  background: #27364c;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 7px 0 15px;
+}
+
+.fill {
+  background: var(--green);
+  height: 20px;
+  border-radius: 8px;
+}
+
+pre {
+  background: #09111f;
+  padding: 16px;
+  border-radius: 10px;
+  max-height: 420px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+summary {
+  cursor: pointer;
+  color: var(--blue);
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  padding: 25px;
+}
+
+@media (max-width: 750px) {
+  .grid,
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>HandFracture AI</header>
+
+<main>
+
+<h1>Hand X-ray Analysis Dashboard</h1>
+
+<p>
+  ResNet18 screening, YOLOv8n fracture detection,
+  uncertainty estimation, Grad-CAM visualization,
+  and hybrid decision support.
+</p>
+
+<!-- UPLOAD -->
+
+<section class="panel">
+
+  <h2>Upload X-ray</h2>
+
+  <label class="drop" for="fileInput">
+    <strong id="fileLabel">
+      Select a JPG or PNG X-ray
+    </strong>
+    <p>Maximum file size: 10 MB</p>
+  </label>
+
+  <input
+    id="fileInput"
+    type="file"
+    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+  >
+
+  <p>
+    <label for="backend">
+      <strong>Inference hardware</strong>
+    </label>
+
+    <br>
+
+    <select id="backend">
+      <option value="auto">
+        Auto — Smart Benchmark
+      </option>
+
+      <option value="cpu">
+        CPU — OpenVINO
+      </option>
+
+      <option value="gpu">
+        GPU — System GPU
+      </option>
+
+      <option value="fpga">
+        FPGA — Unavailable
+      </option>
+    </select>
+  </p>
+
+  <p id="backendNote"></p>
+  <p id="systemInfo"></p>
+
+  <button id="analyzeButton" disabled>
+    Analyze X-ray
+  </button>
+
+  <p id="message" aria-live="polite"></p>
+
+</section>
+
+
+<!-- RESULTS -->
+
+<section id="results" class="hidden">
+
+  <!-- IMAGE VISUALIZATIONS -->
+
+  <div class="grid">
+
+    <section class="panel">
+      <h2>Original X-ray</h2>
+
+      <img
+        id="originalImage"
+        class="image"
+        alt="Original X-ray"
+      >
+    </section>
+
+
+    <section class="panel">
+      <h2>Fracture Bounding Boxes</h2>
+
+      <img
+        id="boxesImage"
+        class="image hidden"
+        alt="Fracture detection bounding boxes"
+      >
+
+      <div
+        id="boxesEmpty"
+        class="empty hidden">
+      </div>
+    </section>
+
+
+    <!-- ONLY ONE GRAD-CAM PANEL -->
+
+    <section class="panel">
+      <h2>Grad-CAM</h2>
+
+      <img
+        id="gradcamImage"
+        class="image hidden"
+        alt="Localized fracture Grad-CAM visualization"
+      >
+
+      <div
+        id="gradcamEmpty"
+        class="empty hidden">
+      </div>
+
+      <p>
+        Gradient-based model activation visualization
+        around YOLO fracture candidate regions.
+      </p>
+    </section>
+
+  </div>
+
+
+  <!-- PERFORMANCE -->
+
+  <section class="panel">
+
+    <h2>Live Performance</h2>
+
+    <div
+      id="liveMetrics"
+      class="metrics">
+    </div>
+
+    <div id="timingBars"></div>
+
+    <p>
+      These are per-image timing measurements,
+      not detection accuracy.
+    </p>
+
+  </section>
+
+
+  <!-- MODEL RESULTS -->
+
+  <div class="grid">
+
+    <section class="panel">
+
+      <h2>ResNet18 Screening</h2>
+
+      <strong id="screening">—</strong>
+
+      <p id="screeningDetails"></p>
+
+    </section>
+
+
+    <section class="panel">
+
+      <h2>Uncertainty</h2>
+
+      <strong id="uncertainty">—</strong>
+
+      <p id="uncertaintyDetails"></p>
+
+    </section>
+
+
+    <section class="panel">
+
+      <h2>YOLOv8n Detection</h2>
+
+      <strong id="detections">—</strong>
+
+      <p id="detectionDetails"></p>
+
+    </section>
+
+
+    <section class="panel">
+
+      <h2>Hybrid Decision</h2>
+
+      <strong id="decision">—</strong>
+
+      <p id="decisionDetails"></p>
+
+    </section>
+
+  </div>
+
+
+  <!-- GRAD-CAM DIAGNOSTICS -->
+
+  <section class="panel">
+
+    <h2>Grad-CAM Diagnostic</h2>
+
+    <p id="camDiagnostic"></p>
+
+  </section>
+
+
+  <!-- SMART AUTO -->
+
+  <section
+    id="smartAutoPanel"
+    class="panel hidden">
+
+    <h2>Smart Auto Benchmark</h2>
+
+    <div
+      id="smartAutoMetrics"
+      class="metrics">
+    </div>
+
+    <p id="smartAutoReason"></p>
+
+  </section>
+
+
+  <!-- JSON -->
+
+  <section class="panel">
+
+    <h2>Complete JSON Report</h2>
+
+    <details>
+      <summary>View report</summary>
+      <pre id="jsonReport"></pre>
+    </details>
+
+  </section>
+
+</section>
+
+
+<!-- SAVED BENCHMARK -->
+
+<section class="panel">
+
+  <h2>Saved OpenVINO CPU Benchmark</h2>
+
+  <div id="benchmarkChart"></div>
+
+  <p id="benchmarkMessage"></p>
+
+</section>
+
+</main>
+
+
+<footer>
+  HandFracture AI — Research prototype only.
+  Model results are not a clinical diagnosis.
+</footer>
+
+
+<script>
+
+const $ = id => document.getElementById(id);
+
+const fileInput = $("fileInput");
+const button = $("analyzeButton");
+
+let originalURL = null;
+
+
+function number(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return NaN;
+  }
+
+  return Number(value);
+}
+
+
+function fixed(value, digits = 2) {
+  const n = number(value);
+
+  return Number.isFinite(n)
+    ? n.toFixed(digits)
+    : "Not reported";
+}
+
+
+function percent(value) {
+  const n = number(value);
+
+  return Number.isFinite(n)
+    ? (n * 100).toFixed(2) + "%"
+    : "Not reported";
+}
+
+
+function firstNumber(...values) {
+  for (const value of values) {
+    const n = number(value);
+
+    if (Number.isFinite(n)) {
+      return n;
+    }
+  }
+
+  return undefined;
+}
+
+
+function setText(id, value) {
+  $(id).textContent = value ?? "—";
+}
+
+
+function backendNote() {
+  const selected = $("backend").value;
+
+  const notes = {
+    auto:
+      "Smart Auto benchmarks the available backends " +
+      "and selects the fastest eligible complete pipeline.",
+
+    cpu:
+      "CPU uses OpenVINO inference.",
+
+    gpu:
+      "GPU uses CUDA on supported NVIDIA systems " +
+      "or MPS on Apple Silicon.",
+
+    fpga:
+      "FPGA requires compatible hardware and runtime."
+  };
+
+  setText("backendNote", notes[selected]);
+}
+
+
+$("backend").addEventListener(
+  "change",
+  backendNote
+);
+
+backendNote();
+
+
+async function loadHardware() {
+  try {
+    const response = await fetch("/api/hardware");
+
+    if (!response.ok) {
+      throw new Error("Hardware endpoint unavailable");
+    }
+
+    const info = await response.json();
+
+    setText(
+      "systemInfo",
+      "Detected GPU: " +
+      (info.gpu_name || "None") +
+      " | Auto: " +
+      (info.auto_backend || "Smart Auto")
+    );
+
+  } catch {
+    setText(
+      "systemInfo",
+      "Hardware detection unavailable."
+    );
+  }
+}
+
+loadHardware();
+
+
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+
+  button.disabled = !file;
+
+  setText(
+    "fileLabel",
+    file?.name || "Select a JPG or PNG X-ray"
+  );
+
+  setText("message", "");
+});
+
+
+function showImage(imageId, emptyId, url, reason) {
+  const img = $(imageId);
+  const empty = $(emptyId);
+
+  img.classList.add("hidden");
+  empty.classList.add("hidden");
+
+  img.removeAttribute("src");
+
+  if (!url) {
+    empty.textContent = reason;
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  img.onload = () => {
+    empty.classList.add("hidden");
+    img.classList.remove("hidden");
+  };
+
+  img.onerror = () => {
+    img.classList.add("hidden");
+
+    empty.textContent =
+      "Visualization image could not be loaded.";
+
+    empty.classList.remove("hidden");
+  };
+
+  img.src = url;
+}
+
+
+function addMetric(container, label, value) {
+  const box = document.createElement("div");
+  box.className = "metric";
+
+  const name = document.createElement("span");
+  name.textContent = label;
+
+  const result = document.createElement("strong");
+  result.textContent = value ?? "Not reported";
+
+  box.append(name, result);
+  container.append(box);
+}
+
+
+function getDetections(report) {
+  const yolo = report.stage_3_yolov8 || {};
+
+  return Array.isArray(yolo.detections)
+    ? yolo.detections
+    : [];
+}
+
+
+function getCandidateCount(report, perf) {
+  const detections = getDetections(report);
+
+  const reported = firstNumber(
+    perf.fracture_candidates_at_010,
+    perf.candidates_at_threshold,
+    perf.candidate_count
+  );
+
+  if (reported !== undefined) {
+    return reported;
+  }
+
+  return detections.filter(d => {
+    const confidence = firstNumber(
+      d.confidence,
+      d.conf,
+      d.score
+    );
+
+    return confidence !== undefined &&
+      confidence >= 0.10;
+  }).length;
+}
+
+
+function showPerformance(perf, report) {
+  const root = $("liveMetrics");
+  const bars = $("timingBars");
+
+  root.replaceChildren();
+  bars.replaceChildren();
+
+  const count = getCandidateCount(
+    report,
+    perf
+  );
+
+  const total = firstNumber(
+    perf.full_pipeline_ms,
+    perf.complete_pipeline_ms,
+    perf.total_pipeline_ms
+  );
+
+  const fields = [
+    ["Backend", perf.backend],
+    ["Device", perf.device],
+
+    [
+      "YOLO inference",
+      fixed(perf.yolo_inference_ms, 3) + " ms"
+    ],
+
+    [
+      "YOLO request",
+      fixed(perf.yolo_request_ms, 3) + " ms"
+    ],
+
+    [
+      "Candidates ≥ 0.10",
+      count
+    ],
+
+    [
+      "Highest confidence",
+      percent(perf.highest_confidence)
+    ],
+
+    [
+      "Complete pipeline",
+      total === undefined
+        ? "Not reported"
+        : total.toFixed(3) + " ms"
+    ]
+  ];
+
+  for (const [label, value] of fields) {
+    addMetric(root, label, value);
+  }
+
+  const timings = [
+    [
+      "Preprocess",
+      number(perf.yolo_preprocess_ms)
+    ],
+
+    [
+      "Inference",
+      number(perf.yolo_inference_ms)
+    ],
+
+    [
+      "Postprocess",
+      number(perf.yolo_postprocess_ms)
+    ]
+  ];
+
+  const max = Math.max(
+    0.001,
+    ...timings.map(item =>
+      Number.isFinite(item[1])
+        ? item[1]
+        : 0
+    )
+  );
+
+  for (const [name, value] of timings) {
+    if (!Number.isFinite(value)) {
+      continue;
+    }
+
+    const label = document.createElement("p");
+
+    label.textContent =
+      name + ": " + value.toFixed(3) + " ms";
+
+    const track = document.createElement("div");
+    track.className = "track";
+
+    const fill = document.createElement("div");
+    fill.className = "fill";
+
+    fill.style.width =
+      (value / max * 100) + "%";
+
+    track.append(fill);
+    bars.append(label, track);
+  }
+}
+
+
+function showSmartAuto(data, report) {
+  const smart = data.smart_auto ||
+    report.smart_auto;
+
+  const panel = $("smartAutoPanel");
+  const root = $("smartAutoMetrics");
+
+  root.replaceChildren();
+
+  if (!smart) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  panel.classList.remove("hidden");
+
+  addMetric(
+    root,
+    "Selected backend",
+    smart.selected_label ||
+      smart.selected_backend
+  );
+
+  const benchmarks = smart.benchmarks || {};
+
+  for (const result of Object.values(benchmarks)) {
+    addMetric(
+      root,
+      result.label || result.backend,
+      fixed(result.median_ms, 3) + " ms"
+    );
+  }
+
+  setText(
+    "smartAutoReason",
+    smart.selection_reason ||
+      "Selected using measured pipeline performance."
+  );
+}
+
+
+button.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+
+  if (!file) {
+    return;
+  }
+
+  const selected = $("backend").value;
+
+  if (selected === "fpga") {
+    $("message").className = "warning";
+
+    setText(
+      "message",
+      "FPGA inference is unavailable."
+    );
+
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    $("message").className = "error";
+
+    setText(
+      "message",
+      "Maximum upload size is 10 MB."
+    );
+
+    return;
+  }
+
+  button.disabled = true;
+
+  $("results").classList.add("hidden");
+
+  $("message").className = "";
+
+  setText(
+    "message",
+    selected === "auto"
+      ? "Smart Auto is benchmarking CPU and GPU, then analyzing the X-ray. This may take some time..."
+      : "Analyzing X-ray..."
+  );
+
+  const form = new FormData();
+
+  form.append("file", file);
+  form.append("backend", selected);
+
+  try {
+    const response = await fetch(
+      "/api/analyze",
+      {
+        method: "POST",
+        body: form
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        typeof data.detail === "string"
+          ? data.detail
+          : "Analysis failed: HTTP " +
+            response.status
+      );
+    }
+
+    const report = data.report || {};
+
+    const perf =
+      data.live_performance ||
+      report.live_performance ||
+      {};
+
+    const screening =
+      report.stage_1_resnet18?.results || {};
+
+    const uncertainty =
+      report.stage_2_uncertainty || {};
+
+    const yolo =
+      report.stage_3_yolov8 || {};
+
+    const hybrid =
+      report.stage_5_hybrid_decision || {};
+
+    const cam =
+      report.stage_4_gradcam || {};
+
+    const urls =
+      data.heatmap_urls || {};
+
+    const count = getCandidateCount(
+      report,
+      perf
+    );
+
+    if (originalURL) {
+      URL.revokeObjectURL(originalURL);
+    }
+
+    originalURL = URL.createObjectURL(file);
+
+    $("originalImage").src = originalURL;
+
+
+    // Bounding-box image
+    showImage(
+      "boxesImage",
+      "boxesEmpty",
+      urls.boxes || null,
+      "Bounding-box image unavailable."
+    );
+
+
+    // Enhanced localized Grad-CAM.
+    // Fall back to the old masked image until
+    // the backend supplies the new image.
+    const gradcamURL =
+      urls.gradcam ||
+      urls.masked_heatmap ||
+      null;
+
+    const gradcamReason = count === 0
+      ? "No qualifying fracture candidate was detected. Detection-specific Grad-CAM was not generated."
+      : "Grad-CAM visualization unavailable.";
+
+    showImage(
+      "gradcamImage",
+      "gradcamEmpty",
+      cam.generated
+        ? gradcamURL
+        : null,
+      gradcamReason
+    );
+
+
+    // ResNet18
+    setText(
+      "screening",
+      screening.prediction ||
+        "Not reported"
+    );
+
+    setText(
+      "screeningDetails",
+      "Normal: " +
+      percent(
+        screening.mean_normal_probability
+      ) +
+      " | Abnormal: " +
+      percent(
+        screening.mean_abnormal_probability
+      )
+    );
+
+
+    // Uncertainty
+    setText(
+      "uncertainty",
+      fixed(
+        uncertainty.normalized_entropy,
+        4
+      )
+    );
+
+    setText(
+      "uncertaintyDetails",
+      "TTA consistency: " +
+      percent(
+        uncertainty.tta_consistency
+      )
+    );
+
+
+    // YOLO
+    setText(
+      "detections",
+      count + " candidate(s)"
+    );
+
+    setText(
+      "detectionDetails",
+      count > 0
+        ? "YOLO identified fracture candidates. These are not confirmed fractures."
+        : "No candidate passed the threshold. Fracture is not excluded."
+    );
+
+
+    // Hybrid
+    setText(
+      "decision",
+      hybrid.status ||
+      hybrid.decision ||
+      "Not reported"
+    );
+
+    setText(
+      "decisionDetails",
+      Array.isArray(hybrid.reasons)
+        ? hybrid.reasons.join(" • ")
+        : "See JSON report."
+    );
+
+
+    // Grad-CAM diagnostic
+    setText(
+      "camDiagnostic",
+      cam.generated
+        ? (
+          "Grad-CAM generated successfully. " +
+          "Matched candidate: " +
+          (cam.matched_candidate ?? "N/A") +
+          " | Matching IoU: " +
+          fixed(cam.matching_iou, 3) +
+          ". Heatmap color intensity is not a clinical fracture probability."
+        )
+        : gradcamReason
+    );
+
+
+    // Performance
+    showPerformance(perf, report);
+
+
+    // Smart Auto
+    showSmartAuto(data, report);
+
+
+    // JSON
+    setText(
+      "jsonReport",
+      JSON.stringify(
+        report,
+        null,
+        2
+      )
+    );
+
+
+    $("results").classList.remove("hidden");
+
+    $("message").className = "success";
+
+    setText(
+      "message",
+      "Analysis completed on " +
+      (
+        data.resolved_backend ||
+        perf.backend ||
+        "the selected backend"
+      ) +
+      "."
+    );
+
+  } catch (error) {
+    $("message").className = "error";
+
+    setText(
+      "message",
+      error.message
+    );
+
+  } finally {
+    button.disabled = false;
+  }
+});
+
+
+async function loadBenchmarks() {
+  try {
+    const response = await fetch(
+      "/api/benchmarks"
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "Saved benchmark unavailable."
+      );
+    }
+
+    const data = await response.json();
+
+    const root = $("benchmarkChart");
+    root.replaceChildren();
+
+    for (const [name, key] of [
+      ["ResNet18", "resnet18"],
+      ["YOLOv8n", "yolov8n"]
+    ]) {
+      const model = data[key] || {};
+
+      const pytorch = number(
+        model.pytorch_cpu?.mean_ms
+      );
+
+      const openvino = number(
+        model.openvino_cpu?.mean_ms
+      );
+
+      if (
+        !Number.isFinite(pytorch) ||
+        !Number.isFinite(openvino) ||
+        openvino <= 0
+      ) {
+        continue;
+      }
+
+      const p = document.createElement("p");
+
+      p.textContent =
+        name +
+        ": PyTorch CPU " +
+        pytorch.toFixed(2) +
+        " ms | OpenVINO CPU " +
+        openvino.toFixed(2) +
+        " ms | Speedup " +
+        (pytorch / openvino).toFixed(2) +
+        "×";
+
+      root.append(p);
+    }
+
+    if (!root.children.length) {
+      setText(
+        "benchmarkMessage",
+        "No compatible saved benchmark data found."
+      );
+    }
+
+  } catch (error) {
+    setText(
+      "benchmarkMessage",
+      error.message
+    );
+  }
+}
+
+loadBenchmarks();
+
+</script>
+
+</body>
+</html>

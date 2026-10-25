@@ -1,0 +1,36 @@
+
+# HandFracture AI - Python Dependencies
+# Recommended Python version: 3.11
+
+# Deep Learning
+torch
+torchvision
+ultralytics
+
+# OpenVINO CPU Inference
+openvino
+
+# Image Processing
+numpy
+opencv-python
+Pillow
+
+# Scientific Computing and Evaluation
+scipy
+scikit-learn
+pandas
+matplotlib
+seaborn
+
+# Grad-CAM and Explainable AI
+grad-cam
+
+# Web Application
+fastapi
+uvicorn
+python-multipart
+
+# Configuration and Utilities
+PyYAML
+tqdm
+requests

@@ -1,4 +1,3 @@
-
 """
 HandFracture AI - Smart Auto Backend Selection
 
@@ -59,6 +58,17 @@ def supported_gpu():
     ):
         return "mps"
 
+    try:
+        import openvino as ov
+
+        if any(
+            device == "GPU" or device.startswith("GPU.")
+            for device in ov.Core().available_devices
+        ):
+            return "openvino_gpu"
+    except ImportError:
+        pass
+
     return None
 
 
@@ -68,6 +78,9 @@ def gpu_label(backend):
 
     if backend == "mps":
         return "PyTorch MPS"
+
+    if backend == "openvino_gpu":
+        return "OpenVINO Intel GPU"
 
     return "OpenVINO CPU"
 
@@ -437,6 +450,7 @@ def main():
             "cpu",
             "gpu",
             "openvino",
+            "openvino_gpu",
             "mps",
             "cuda",
             "fpga"
@@ -476,6 +490,9 @@ def main():
                 raise RuntimeError(
                     "No supported GPU was detected."
                 )
+
+        elif args.backend == "openvino_gpu":
+            backend = "openvino_gpu"
 
         else:
             backend = args.backend
